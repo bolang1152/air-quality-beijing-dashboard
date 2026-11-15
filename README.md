@@ -65,7 +65,7 @@ Langkah-langkah menjalankan notebook:
 1. Pastikan Python sudah terpasang pada perangkat.
 2. Buka folder utama proyek menggunakan VS Code.
 3. Pastikan ekstensi **Python** dan **Jupyter** sudah terpasang.
-4. Buka file `Proyek_Analisis_Data.ipynb`.
+4. Buka file `notebook.ipynb`.
 5. Pilih kernel Python yang sudah memiliki library yang dibutuhkan.
 6. Pastikan folder `data/` berada pada direktori yang sama dengan notebook agar file CSV dapat dibaca.
 7. Jalankan seluruh sel notebook secara berurutan dari awal hingga akhir.
