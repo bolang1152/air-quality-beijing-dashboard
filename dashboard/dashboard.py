@@ -1,4 +1,3 @@
-
 import os
 
 import matplotlib.pyplot as plt
@@ -15,11 +14,22 @@ st.set_page_config(
 
 sns.set_theme(style="whitegrid")
 
-POLLUTANTS = ["PM2.5", "PM10", "SO2", "NO2", "CO", "O3"]
 MONTH_LABELS = [
     "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
     "Jul", "Agu", "Sep", "Okt", "Nov", "Des"
 ]
+SEASON_ORDER = ["Musim Semi", "Musim Panas", "Musim Gugur", "Musim Dingin"]
+SEASON_COLORS = ["#2ca02c", "#ff7f0e", "#8c564b", "#1f77b4"]
+
+
+def get_season(month):
+    if month in [3, 4, 5]:
+        return "Musim Semi"
+    if month in [6, 7, 8]:
+        return "Musim Panas"
+    if month in [9, 10, 11]:
+        return "Musim Gugur"
+    return "Musim Dingin"
 
 
 # Memuat dataset
@@ -29,7 +39,12 @@ def load_data():
         os.path.dirname(os.path.abspath(__file__)),
         "main_data.csv"
     )
-    return pd.read_csv(file_path)
+    data = pd.read_csv(file_path)
+    data["season"] = data["month"].apply(get_season)
+    data["year_month"] = (
+        data["year"].astype(str) + "-" + data["month"].astype(str).str.zfill(2)
+    )
+    return data
 
 
 def show_fig(fig):
@@ -78,8 +93,6 @@ month_range = st.sidebar.select_slider(
     format_func=lambda m: MONTH_LABELS[m - 1],
 )
 
-pollutant = st.sidebar.selectbox("Pilih Polutan", POLLUTANTS)
-
 filtered_df = df[
     df["station"].isin(selected)
     & df["year"].between(*year_range)
@@ -91,8 +104,8 @@ filtered_df = df[
 st.title("Dashboard Analisis Kualitas Udara Beijing")
 
 st.write(
-    "Hasil analisis kualitas udara di stasiun pemantauan Beijing "
-    "selama periode 2013–2017."
+    "Hasil analisis konsentrasi PM2.5 di stasiun pemantauan Beijing "
+    "selama periode Maret 2013 – Februari 2017."
 )
 
 
@@ -115,125 +128,167 @@ col3.metric(
     "Periode",
     f"{filtered_df['year'].min()}–{filtered_df['year'].max()}"
 )
-col4.metric(
-    f"Rata-rata {pollutant}",
-    f"{filtered_df[pollutant].mean():.1f}"
-)
+col4.metric("Rata-rata PM2.5", f"{filtered_df['PM2.5'].mean():.1f} µg/m³")
 
 st.divider()
 
 
-# 1. Rata-rata antarstasiun
-st.subheader("1. Rata-rata Konsentrasi Polutan Antarstasiun")
+# 1. Rata-rata PM2.5 antarstasiun
+st.subheader("1. Rata-rata Konsentrasi PM2.5 Antarstasiun")
 
 station_avg = (
-    filtered_df.groupby("station")[pollutant]
+    filtered_df.groupby("station")["PM2.5"]
     .mean()
     .sort_values(ascending=False)
 )
 
-fig, ax = plt.subplots(figsize=(12, 5))
+bar_colors = [
+    "#d62728" if s == station_avg.idxmax()
+    else "#2ca02c" if s == station_avg.idxmin()
+    else "#9ecae1"
+    for s in station_avg.index
+]
 
+fig, ax = plt.subplots(figsize=(12, 5))
 sns.barplot(
     x=station_avg.index,
     y=station_avg.values,
-    color="#4C78A8",
+    hue=station_avg.index,
+    palette=bar_colors,
+    legend=False,
     ax=ax
 )
-
-ax.bar_label(
-    ax.containers[0],
-    fmt="%.1f",
-    padding=2,
-    fontsize=9
-)
-
+ax.bar_label(ax.containers[0], fmt="%.1f", padding=2, fontsize=9)
 ax.set_xlabel("Stasiun")
-ax.set_ylabel("Konsentrasi (µg/m³)")
-ax.set_title(f"Rata-rata {pollutant} per Stasiun")
-
-plt.setp(
-    ax.get_xticklabels(),
-    rotation=45,
-    ha="right"
-)
-
+ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
+ax.set_title("Rata-rata PM2.5 per Stasiun")
+plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
 show_fig(fig)
+
+st.caption(
+    f"Tertinggi: **{station_avg.idxmax()}** ({station_avg.max():.2f} µg/m³) | "
+    f"Terendah: **{station_avg.idxmin()}** ({station_avg.min():.2f} µg/m³)"
+)
 
 st.divider()
 
 
-# 2. Distribusi
-st.subheader("2. Distribusi Konsentrasi Polutan")
+# 2. Perubahan PM2.5 setiap bulan
+st.subheader("2. Perubahan Rata-rata PM2.5 Setiap Bulan")
 
-fig, ax = plt.subplots(figsize=(10, 5))
+ym_avg = filtered_df.groupby("year_month")["PM2.5"].mean().sort_index()
 
-sns.histplot(
-    data=filtered_df,
-    x=pollutant,
-    bins=50,
-    kde=True,
+fig, ax = plt.subplots(figsize=(14, 5))
+ax.plot(ym_avg.index, ym_avg.values, marker="o", color="#1f77b4")
+ax.scatter(
+    [ym_avg.idxmax()], [ym_avg.max()],
+    color="red", s=120, zorder=5,
+    label=f"Tertinggi: {ym_avg.idxmax()} ({ym_avg.max():.2f})"
+)
+step = max(1, len(ym_avg) // 16)
+ax.set_xticks(range(0, len(ym_avg), step))
+ax.set_xticklabels(ym_avg.index[::step], rotation=45)
+ax.set_ylim(bottom=0)
+ax.set_title("Rata-rata PM2.5 Setiap Bulan")
+ax.set_xlabel("Tahun-Bulan")
+ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
+ax.legend()
+show_fig(fig)
+
+month_avg = filtered_df.groupby("month")["PM2.5"].mean()
+
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.bar(
+    [MONTH_LABELS[m - 1] for m in month_avg.index],
+    month_avg.values,
+    color=["#d62728" if m == month_avg.idxmax() else "#9ecae1"
+           for m in month_avg.index]
+)
+ax.set_title("Rata-rata PM2.5 Berdasarkan Bulan Kalender")
+ax.set_xlabel("Bulan")
+ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
+show_fig(fig)
+
+st.caption(
+    f"Bulan kalender dengan rata-rata tertinggi: "
+    f"**{MONTH_LABELS[month_avg.idxmax() - 1]}** ({month_avg.max():.2f} µg/m³)"
+)
+
+st.divider()
+
+
+# 3. PM2.5 berdasarkan musim
+st.subheader("3. Perbandingan Rata-rata PM2.5 Berdasarkan Musim")
+
+season_avg = (
+    filtered_df.groupby("season")["PM2.5"]
+    .mean()
+    .reindex(SEASON_ORDER)
+    .dropna()
+)
+
+fig, ax = plt.subplots(figsize=(9, 5))
+sns.barplot(
+    x=season_avg.index,
+    y=season_avg.values,
+    hue=season_avg.index,
+    palette=[SEASON_COLORS[SEASON_ORDER.index(s)] for s in season_avg.index],
+    legend=False,
     ax=ax
 )
-
-ax.set_title(f"Distribusi Konsentrasi {pollutant}")
-ax.set_xlabel("Konsentrasi (µg/m³)")
-ax.set_ylabel("Frekuensi")
-
+ax.bar_label(ax.containers[0], fmt="%.1f", padding=2, fontsize=10)
+ax.set_title("Rata-rata PM2.5 Berdasarkan Musim")
+ax.set_xlabel("Musim")
+ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
 show_fig(fig)
+
+st.caption(
+    f"Tertinggi: **{season_avg.idxmax()}** ({season_avg.max():.2f} µg/m³) | "
+    f"Terendah: **{season_avg.idxmin()}** ({season_avg.min():.2f} µg/m³)"
+)
 
 st.divider()
 
 
-# 3. Perubahan berdasarkan bulan
-st.subheader("3. Perubahan Konsentrasi Polutan Berdasarkan Bulan")
+# 4. Korelasi PM2.5 dengan meteorologi
+st.subheader("4. Hubungan PM2.5 dengan Suhu, Curah Hujan, dan Kecepatan Angin")
 
-monthly_avg = filtered_df.groupby("month")[pollutant].mean()
+meteo_cols = ["PM2.5", "TEMP", "RAIN", "WSPM"]
+correlation = filtered_df[meteo_cols].corr()
+pm25_corr = correlation["PM2.5"].drop("PM2.5")
 
-fig, ax = plt.subplots(figsize=(10, 5))
+col_a, col_b = st.columns(2)
 
-ax.plot(
-    monthly_avg.index,
-    monthly_avg.values,
-    marker="o"
-)
+with col_a:
+    fig, ax = plt.subplots(figsize=(6, 5))
+    sns.heatmap(
+        correlation,
+        annot=True,
+        cmap="coolwarm",
+        fmt=".2f",
+        vmin=-1,
+        vmax=1,
+        ax=ax,
+    )
+    ax.set_title("Heatmap Korelasi PM2.5 dan Meteorologi")
+    show_fig(fig)
 
-ax.set_title(f"Rata-rata {pollutant} Berdasarkan Bulan")
-ax.set_xlabel("Bulan")
-ax.set_ylabel("Konsentrasi (µg/m³)")
-ax.set_xticks(range(1, 13))
-ax.set_xticklabels(MONTH_LABELS)
-ax.set_ylim(bottom=0)
-
-show_fig(fig)
-
-st.divider()
-
-
-# 4. Korelasi
-st.subheader("4. Korelasi Polutan dan Kondisi Meteorologi")
-
-correlation_cols = POLLUTANTS + [
-    "TEMP", "PRES", "DEWP", "RAIN", "WSPM"
-]
-
-correlation = filtered_df[correlation_cols].corr()
-
-fig, ax = plt.subplots(figsize=(12, 8))
-
-sns.heatmap(
-    correlation,
-    annot=True,
-    cmap="coolwarm",
-    fmt=".2f",
-    vmin=-1,
-    vmax=1,
-    ax=ax,
-)
-
-ax.set_title("Heatmap Korelasi")
-
-show_fig(fig)
+with col_b:
+    fig, ax = plt.subplots(figsize=(6, 5))
+    sns.barplot(
+        x=pm25_corr.index,
+        y=pm25_corr.values,
+        hue=pm25_corr.index,
+        palette="coolwarm",
+        legend=False,
+        ax=ax
+    )
+    ax.bar_label(ax.containers[0], fmt="%.2f", padding=2)
+    ax.axhline(0, color="black", linewidth=0.8)
+    ax.set_title("Korelasi PM2.5 terhadap Variabel Meteorologi")
+    ax.set_xlabel("Variabel")
+    ax.set_ylabel("Koefisien Korelasi")
+    show_fig(fig)
 
 st.divider()
 
@@ -304,10 +359,10 @@ ax.set_title("Hubungan Suhu Udara dengan PM2.5")
 
 show_fig(fig)
 
-
-# Sumber dataset
 st.divider()
 
+
+# Sumber dataset
 st.caption(
     "Sumber: Beijing Multi-Site Air-Quality Dataset | "
     "Periode Maret 2013 – Februari 2017"

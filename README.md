@@ -4,9 +4,14 @@
 
 Proyek ini merupakan analisis data kualitas udara di Beijing menggunakan **Beijing Multi-Site Air-Quality Dataset**. Dataset berisi catatan pengukuran kualitas udara dari 12 stasiun pemantauan selama periode Maret 2013 hingga Februari 2017.
 
-Analisis dilakukan untuk memahami kondisi kualitas udara berdasarkan konsentrasi berbagai polutan, seperti PM2.5, PM10, SO2, NO2, CO, dan O3. Selain itu, dilakukan pengamatan terhadap beberapa faktor meteorologi untuk melihat keterkaitannya dengan konsentrasi polutan.
+Analisis difokuskan pada konsentrasi **PM2.5** sebagai indikator utama kualitas udara, dan dirancang untuk menjawab empat pertanyaan bisnis:
 
-Proyek ini mencakup tahapan pengumpulan data, penilaian data (*assessing*), pembersihan data (*cleaning*), eksplorasi data (*exploratory data analysis*), visualisasi, serta penyusunan kesimpulan dan rekomendasi. Hasil analisis juga disajikan melalui dashboard interaktif menggunakan Streamlit.
+1. Stasiun pemantauan mana yang memiliki rata-rata konsentrasi PM2.5 tertinggi dan terendah?
+2. Bagaimana perubahan rata-rata konsentrasi PM2.5 setiap bulan selama Maret 2013 hingga Februari 2017, dan bulan apa yang memiliki rata-rata tertinggi?
+3. Bagaimana perbandingan rata-rata konsentrasi PM2.5 pada musim semi, musim panas, musim gugur, dan musim dingin?
+4. Bagaimana hubungan antara konsentrasi PM2.5 dengan suhu, curah hujan, dan kecepatan angin?
+
+Proyek ini mencakup tahapan pengumpulan data, penilaian data (*assessing*), pembersihan data (*cleaning*), eksplorasi data (*exploratory data analysis*), visualisasi, analisis lanjutan, serta penyusunan kesimpulan dan rekomendasi. Hasil analisis juga disajikan melalui dashboard interaktif menggunakan Streamlit.
 
 ## Fitur Dashboard
 
@@ -14,12 +19,11 @@ Dashboard dikembangkan menggunakan Streamlit untuk memudahkan pengguna dalam men
 
 - **Filter Stasiun:** Memilih satu atau beberapa stasiun pemantauan untuk melihat data berdasarkan lokasi.
 - **Filter Waktu:** Memilih rentang tahun dan bulan untuk membatasi data yang dianalisis.
-- **Pemilihan Polutan:** Memilih jenis polutan yang ingin diamati.
-- **Ringkasan Data:** Menampilkan jumlah data, jumlah stasiun, rentang tahun pengamatan, serta rata-rata konsentrasi polutan yang dipilih.
-- **Perbandingan Antarstasiun:** Menampilkan rata-rata konsentrasi polutan pada masing-masing stasiun.
-- **Distribusi Polutan:** Mengamati persebaran konsentrasi polutan melalui histogram.
-- **Pola Bulanan:** Menampilkan perubahan rata-rata konsentrasi polutan berdasarkan bulan.
-- **Analisis Korelasi:** Mengamati hubungan antarvariabel menggunakan heatmap korelasi.
+- **Ringkasan Data:** Menampilkan jumlah data, jumlah stasiun, rentang tahun pengamatan, serta rata-rata konsentrasi PM2.5.
+- **Perbandingan Antarstasiun (Pertanyaan 1):** Menampilkan rata-rata PM2.5 pada masing-masing stasiun, dengan stasiun tertinggi dan terendah ditandai.
+- **Perubahan PM2.5 Setiap Bulan (Pertanyaan 2):** Menampilkan grafik rata-rata PM2.5 setiap bulan dari Maret 2013 hingga Februari 2017, serta rata-rata berdasarkan bulan kalender untuk mengetahui bulan tertinggi.
+- **Perbandingan PM2.5 Berdasarkan Musim (Pertanyaan 3):** Membandingkan rata-rata PM2.5 pada musim semi, musim panas, musim gugur, dan musim dingin.
+- **Korelasi PM2.5 dengan Meteorologi (Pertanyaan 4):** Menampilkan heatmap dan grafik korelasi PM2.5 dengan suhu, curah hujan, dan kecepatan angin.
 - **Analisis Lanjutan PM2.5:** Mengamati rata-rata PM2.5 berdasarkan kategori kecepatan angin serta hubungan suhu udara dengan konsentrasi PM2.5.
 
 ## Struktur Direktori
@@ -70,6 +74,7 @@ Langkah-langkah menjalankan notebook:
 6. Pastikan folder `data/` berada pada direktori yang sama dengan notebook agar file CSV dapat dibaca.
 7. Jalankan seluruh sel notebook secara berurutan dari awal hingga akhir.
 8. Pastikan seluruh proses analisis dan visualisasi berhasil dijalankan tanpa error.
+9. Sel terakhir akan memperbarui `dashboard/main_data.csv` (termasuk kolom `season` dan `year_month`) yang digunakan oleh dashboard.
 
 ## Instalasi dan Menjalankan Dashboard
 
@@ -119,6 +124,6 @@ http://localhost:8501
 
 ## Kesimpulan
 
-Proyek ini memberikan gambaran mengenai kondisi kualitas udara di Beijing berdasarkan data dari 12 stasiun pemantauan selama periode 2013–2017. Melalui proses pengolahan dan eksplorasi data, berbagai pola konsentrasi polutan dapat diamati berdasarkan lokasi, waktu, serta faktor meteorologi.
+Proyek ini memberikan gambaran mengenai konsentrasi PM2.5 di Beijing berdasarkan data dari 12 stasiun pemantauan selama periode Maret 2013 hingga Februari 2017. Melalui proses pengolahan dan eksplorasi data, pola PM2.5 dapat diamati berdasarkan lokasi (stasiun), waktu (bulan), musim, serta faktor meteorologi (suhu, curah hujan, dan kecepatan angin).
 
 Hasil analisis kemudian disajikan dalam bentuk dashboard interaktif agar informasi lebih mudah dipahami dan dieksplorasi. Dengan demikian, proyek ini tidak hanya menerapkan proses analisis data menggunakan Python, tetapi juga menyajikan hasilnya melalui visualisasi yang dapat membantu pengguna memahami karakteristik kualitas udara di Beijing.
