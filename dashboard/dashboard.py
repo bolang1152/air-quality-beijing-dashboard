@@ -9,7 +9,7 @@ import streamlit as st
 # Konfigurasi halaman
 st.set_page_config(
     page_title="Dashboard Kualitas Udara Beijing",
-    page_icon="🌫️",
+    page_icon="",
     layout="wide",
 )
 
